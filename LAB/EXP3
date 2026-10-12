@@ -1,0 +1,112 @@
+clear;
+clc;
+close all;
+
+% EXPERIMENT 3: IMPULSE INVARIANCE VS BILINEAR TRANSFORMATION
+
+%% Design Parameters
+Fs = 5000;              % Sampling frequency in Hz
+T = 1/Fs;                % Sampling period in seconds
+fc = 1000;               % Cutoff frequency in Hz
+Omega_c = 2*pi*fc;       % Analog cutoff frequency in rad/s
+
+%% Analog Low-Pass Filter Prototype
+% H(s) = Omega_c / (s + Omega_c)
+
+b_a = [Omega_c];
+a_a = [1 Omega_c];
+
+%% 1. IMPULSE INVARIANCE METHOD
+
+[b_imp, a_imp] = impinvar(b_a, a_a, Fs);
+
+%% 2. BILINEAR TRANSFORMATION WITH PREWARPING
+
+% Prewarp the desired digital cutoff frequency
+Omega_p = (2/T)*tan(pi*fc/Fs);
+
+% Prewarped analog filter
+b_a_pre = [Omega_p];
+a_a_pre = [1 Omega_p];
+
+% Apply bilinear transformation
+[b_blt, a_blt] = bilinear(b_a_pre, a_a_pre, Fs);
+
+%% 3. DISPLAY NUMERICAL RESULTS
+
+fprintf('============================================\n');
+fprintf(' IMPULSE INVARIANCE VS BILINEAR TRANSFORMATION\n');
+fprintf('============================================\n\n');
+
+fprintf('Sampling Frequency (Fs): %.2f Hz\n', Fs);
+fprintf('Sampling Period (T): %.8f seconds\n', T);
+fprintf('Analog Cutoff Frequency (Omega_c): %.2f rad/s\n', Omega_c);
+fprintf('Prewarped Analog Frequency (Omega_p): %.2f rad/s\n\n', Omega_p);
+
+fprintf('--- IMPULSE INVARIANCE COEFFICIENTS ---\n');
+fprintf('Numerator Coefficients (b_imp):\n');
+disp(b_imp);
+
+fprintf('Denominator Coefficients (a_imp):\n');
+disp(a_imp);
+
+fprintf('--- BILINEAR TRANSFORMATION COEFFICIENTS ---\n');
+fprintf('Numerator Coefficients (b_blt):\n');
+disp(b_blt);
+
+fprintf('Denominator Coefficients (a_blt):\n');
+disp(a_blt);
+
+%% 4. FREQUENCY RESPONSE CALCULATION
+
+[H_imp, f] = freqz(b_imp, a_imp, 2048, Fs);
+[H_blt, ~] = freqz(b_blt, a_blt, 2048, Fs);
+
+% Magnitude response in dB
+mag_imp_db = 20*log10(max(abs(H_imp), 1e-12));
+mag_blt_db = 20*log10(max(abs(H_blt), 1e-12));
+
+% Phase response in degrees
+phase_imp = unwrap(angle(H_imp))*180/pi;
+phase_blt = unwrap(angle(H_blt))*180/pi;
+
+%% 5. PLOT MAGNITUDE AND PHASE RESPONSES
+
+figure('Name', 'Impulse Invariance vs Bilinear Transformation', ...
+       'NumberTitle', 'off');
+
+% Magnitude response comparison
+subplot(2,1,1);
+plot(f, mag_imp_db, 'b', 'LineWidth', 1.5);
+hold on;
+plot(f, mag_blt_db, 'r--', 'LineWidth', 1.5);
+grid on;
+legend('Impulse Invariance', ...
+       'Bilinear Transformation (Prewarped)', ...
+       'Location', 'best');
+title('Magnitude Response Comparison');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude (dB)');
+xlim([0 Fs/2]);
+ylim([-60 5]);
+
+% Phase response comparison
+subplot(2,1,2);
+plot(f, phase_imp, 'b', 'LineWidth', 1.5);
+hold on;
+plot(f, phase_blt, 'r--', 'LineWidth', 1.5);
+grid on;
+legend('Impulse Invariance', ...
+       'Bilinear Transformation (Prewarped)', ...
+       'Location', 'best');
+title('Phase Response Comparison');
+xlabel('Frequency (Hz)');
+ylabel('Phase (degrees)');
+xlim([0 Fs/2]);
+
+sgtitle('Digital Filter Design Method Comparison');
+
+%% 6. EXPERIMENT RESULT
+
+fprintf('\nExperiment completed successfully.\n');
+fprintf('Both digital filter designs and response plots generated.\n');
