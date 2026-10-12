@@ -1,0 +1,122 @@
+
+clc;
+clear;
+close all;
+
+%% EXPERIMENT: FIR WINDOWING TECHNIQUES
+
+% Design Parameters
+Fs = 8000;           % Sampling frequency in Hz
+fc = 1500;           % Cutoff frequency in Hz
+wc = fc/(Fs/2);      % Normalized cutoff frequency
+N = 50;              % Filter order
+
+%% 1. WINDOW FUNCTIONS
+
+w_rect  = rectwin(N+1);
+w_hamm  = hamming(N+1);
+w_hann  = hann(N+1);
+w_black = blackman(N+1);
+
+%% 2. FIR LOW-PASS FILTER DESIGN
+
+b_rect  = fir1(N, wc, w_rect);
+b_hamm  = fir1(N, wc, w_hamm);
+b_hann  = fir1(N, wc, w_hann);
+b_black = fir1(N, wc, w_black);
+
+%% 3. DISPLAY FILTER COEFFICIENTS
+
+fprintf('============================================\n');
+fprintf('     EXPERIMENT: FIR WINDOWING TECHNIQUES\n');
+fprintf('============================================\n\n');
+
+fprintf('Sampling Frequency: %d Hz\n', Fs);
+fprintf('Cutoff Frequency: %d Hz\n', fc);
+fprintf('Filter Order: %d\n\n', N);
+
+fprintf('RECTANGULAR WINDOW COEFFICIENTS (First 5)\n');
+disp(b_rect(1:5));
+
+fprintf('HAMMING WINDOW COEFFICIENTS (First 5)\n');
+disp(b_hamm(1:5));
+
+fprintf('HANN WINDOW COEFFICIENTS (First 5)\n');
+disp(b_hann(1:5));
+
+fprintf('BLACKMAN WINDOW COEFFICIENTS (First 5)\n');
+disp(b_black(1:5));
+
+%% 4. FREQUENCY RESPONSE CALCULATION
+
+[H_rect, f] = freqz(b_rect, 1, 2048, Fs);
+[H_hamm, ~] = freqz(b_hamm, 1, 2048, Fs);
+[H_hann, ~] = freqz(b_hann, 1, 2048, Fs);
+[H_black, ~] = freqz(b_black, 1, 2048, Fs);
+
+% Convert magnitude to dB safely
+M_rect  = 20*log10(max(abs(H_rect), 1e-12));
+M_hamm  = 20*log10(max(abs(H_hamm), 1e-12));
+M_hann  = 20*log10(max(abs(H_hann), 1e-12));
+M_black = 20*log10(max(abs(H_black), 1e-12));
+
+%% 5. MAGNITUDE RESPONSE COMPARISON
+
+figure('Name', 'FIR Windowing Techniques Comparison', ...
+       'NumberTitle', 'off');
+
+subplot(2,1,1);
+
+plot(f, M_rect, 'k', 'LineWidth', 1.2);
+hold on;
+plot(f, M_hamm, 'b', 'LineWidth', 1.5);
+plot(f, M_hann, 'g', 'LineWidth', 1.5);
+plot(f, M_black, 'r', 'LineWidth', 1.5);
+
+grid on;
+legend('Rectangular', 'Hamming', 'Hann', 'Blackman', ...
+       'Location', 'best');
+
+title('FIR Low-Pass Filter Magnitude Response');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude (dB)');
+
+xlim([0 Fs/2]);
+ylim([-100 10]);
+
+xline(fc, '--k', 'Cutoff = 1500 Hz');
+
+hold off;
+
+%% 6. PHASE RESPONSE COMPARISON
+
+Phase_rect  = unwrap(angle(H_rect))*180/pi;
+Phase_hamm  = unwrap(angle(H_hamm))*180/pi;
+Phase_hann  = unwrap(angle(H_hann))*180/pi;
+Phase_black = unwrap(angle(H_black))*180/pi;
+
+subplot(2,1,2);
+
+plot(f, Phase_rect, 'k', 'LineWidth', 1.2);
+hold on;
+plot(f, Phase_hamm, 'b', 'LineWidth', 1.5);
+plot(f, Phase_hann, 'g', 'LineWidth', 1.5);
+plot(f, Phase_black, 'r', 'LineWidth', 1.5);
+
+grid on;
+legend('Rectangular', 'Hamming', 'Hann', 'Blackman', ...
+       'Location', 'best');
+
+title('FIR Filter Phase Response Comparison');
+xlabel('Frequency (Hz)');
+ylabel('Phase (degrees)');
+
+xlim([0 Fs/2]);
+
+hold off;
+
+%% 7. FINAL RESULT
+
+fprintf('\nExperiment completed successfully.\n');
+fprintf('Four FIR filters designed using different windows.\n');
+fprintf('Magnitude and phase responses plotted.\n');
